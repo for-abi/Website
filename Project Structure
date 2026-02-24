@@ -1,0 +1,24 @@
+ai-money-maker/
+├─ backend/
+│  ├─ server.js
+│  ├─ routes/
+│  │   ├─ auth.js
+│  │   ├─ generate.js
+│  │   └─ stripe.js
+│  └─ models/
+│      └─ User.js
+├─ frontend/
+│  ├─ src/
+│  │   ├─ App.jsx
+│  │   ├─ pages/
+│  │   │   ├─ Landing.jsx
+│  │   │   ├─ Dashboard.jsx
+│  │   │   ├─ Login.jsx
+│  │   │   └─ Signup.jsx
+│  │   ├─ components/
+│  │   │   ├─ Navbar.jsx
+│  │   │   └─ ContentCard.jsx
+│  │   └─ styles/tailwind.css
+├─ mobile-app/
+│  └─ App.js (WebView)
+└─ package.json
