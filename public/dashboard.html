@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard – AI Money Maker</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, sans-serif; background: #f0f4f8; color: #1a202c; display: flex; flex-direction: column; min-height: 100vh; }
+    header { background: #2b6cb0; color: #fff; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; }
+    header a { color: #fff; text-decoration: none; font-size: 1.25rem; font-weight: 600; }
+    header button { background: transparent; border: 1px solid #fff; color: #fff; padding: 0.4rem 1rem; border-radius: 4px; cursor: pointer; font-size: 0.875rem; }
+    header button:hover { background: rgba(255,255,255,0.1); }
+    .container { flex: 1; max-width: 700px; margin: 2rem auto; padding: 0 1rem; width: 100%; }
+    .card { background: #fff; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); padding: 2rem; }
+    h2 { margin-bottom: 1.5rem; font-size: 1.5rem; }
+    label { display: block; margin-bottom: 0.25rem; font-size: 0.875rem; font-weight: 500; }
+    textarea { width: 100%; padding: 0.6rem 0.75rem; border: 1px solid #cbd5e0; border-radius: 5px; font-size: 1rem; margin-bottom: 1rem; resize: vertical; min-height: 100px; }
+    textarea:focus { outline: none; border-color: #2b6cb0; box-shadow: 0 0 0 3px rgba(43,108,176,0.2); }
+    select { width: 100%; padding: 0.6rem 0.75rem; border: 1px solid #cbd5e0; border-radius: 5px; font-size: 1rem; margin-bottom: 1rem; background: #fff; }
+    select:focus { outline: none; border-color: #2b6cb0; }
+    button.generate { width: 100%; padding: 0.75rem; background: #2b6cb0; color: #fff; border: none; border-radius: 5px; font-size: 1rem; font-weight: 600; cursor: pointer; }
+    button.generate:hover { background: #2c5282; }
+    button.generate:disabled { background: #90cdf4; cursor: not-allowed; }
+    .result { margin-top: 1.5rem; padding: 1rem; background: #ebf8ff; border-radius: 6px; border: 1px solid #bee3f8; white-space: pre-wrap; word-break: break-word; }
+    .result img { max-width: 100%; border-radius: 6px; margin-top: 0.5rem; }
+    .error { color: #c53030; font-size: 0.875rem; margin-top: 0.75rem; display: none; }
+  </style>
+</head>
+<body>
+  <header>
+    <a href="index.html">AI Money Maker</a>
+    <button id="logoutBtn">Log Out</button>
+  </header>
+  <div class="container">
+    <div class="card">
+      <h2>AI Generator</h2>
+      <label for="prompt">Prompt</label>
+      <textarea id="prompt" placeholder="Describe what you want to generate…"></textarea>
+      <label for="type">Type</label>
+      <select id="type">
+        <option value="text">Text (GPT-4)</option>
+        <option value="image">Image (DALL·E 3)</option>
+      </select>
+      <button class="generate" id="generateBtn">Generate</button>
+      <p id="error" class="error"></p>
+      <div id="result" class="result" style="display:none;"></div>
+    </div>
+  </div>
+  <script>
+    const token = localStorage.getItem('token');
+    if (!token) window.location.href = 'login.html';
+
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+      localStorage.removeItem('token');
+      window.location.href = 'index.html';
+    });
+
+    document.getElementById('generateBtn').addEventListener('click', async () => {
+      const prompt = document.getElementById('prompt').value.trim();
+      const type = document.getElementById('type').value;
+      const errorEl = document.getElementById('error');
+      const resultEl = document.getElementById('result');
+      const btn = document.getElementById('generateBtn');
+
+      if (!prompt) { errorEl.textContent = 'Please enter a prompt.'; errorEl.style.display = 'block'; return; }
+      errorEl.style.display = 'none';
+      resultEl.style.display = 'none';
+      btn.disabled = true;
+      btn.textContent = 'Generating…';
+
+      try {
+        const res = await fetch('/api/generate', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ prompt, type })
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          if (res.status === 401) { localStorage.removeItem('token'); window.location.href = 'login.html'; return; }
+          throw new Error(data.error || 'Generation failed');
+        }
+        resultEl.style.display = 'block';
+        if (type === 'image') {
+          resultEl.innerHTML = `<img src="${data.result}" alt="Generated image" />`;
+        } else {
+          resultEl.textContent = data.result;
+        }
+      } catch (err) {
+        errorEl.textContent = err.message;
+        errorEl.style.display = 'block';
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Generate';
+      }
+    });
+  </script>
+</body>
+</html>
